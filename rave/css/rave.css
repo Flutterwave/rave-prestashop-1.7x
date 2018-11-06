@@ -1,0 +1,10 @@
+body#checkout section.checkout-step .payment-options label {
+  display: table-cell;
+  text-align: left !important;
+  margin-bottom: 10px !important;
+}
+body#checkout section.checkout-step .payment-options label img {
+  display: block !important;
+  height: 100px !important;
+  margin-top: 17px;
+}
