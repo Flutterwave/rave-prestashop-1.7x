@@ -39,7 +39,7 @@ class Rave extends PaymentModule
     public $owner;
     public $address;
     public $extra_mail_vars;
-    
+
     public function __construct()
     {
         $this->name = 'rave';
@@ -53,8 +53,8 @@ class Rave extends PaymentModule
         $this->currencies = true;
         $this->currencies_mode = 'checkbox';
 
-        $config = Configuration::getMultiple(array('RAVE_LIVE_SECRETKEY', 'RAVE_LIVE_PUBLICKEY', 'RAVE_TEST_SECRETKEY', 'RAVE_TEST_PUBLICKEY', 'RAVE_MERCHANT_TITLE', 'RAVE_MERCHANT_DESCRIPTION', 'RAVE_MERCHANT_LOGO', 'RAVE_PAYMENT_PLAN', 'RAVE_META_NAME', 'RAVE_META_VALUE', 'RAVE_PAYMENT_METHOD','RAVE_MERCHANT_COUNTRY','RAVE_ENV'));
-     
+        $config = Configuration::getMultiple(array('RAVE_LIVE_SECRETKEY', 'RAVE_LIVE_PUBLICKEY', 'RAVE_TEST_SECRETKEY', 'RAVE_TEST_PUBLICKEY', 'RAVE_MERCHANT_TITLE', 'RAVE_MERCHANT_DESCRIPTION', 'RAVE_MERCHANT_LOGO', 'RAVE_PAYMENT_PLAN', 'RAVE_META_NAME', 'RAVE_META_VALUE', 'RAVE_PAYMENT_METHOD', 'RAVE_MERCHANT_COUNTRY', 'RAVE_ENV'));
+
         $this->bootstrap = true;
         parent::__construct();
 
@@ -70,7 +70,7 @@ class Rave extends PaymentModule
         }
         // TODO : Cek insert new state, Custom CSS
         $newState = new OrderState();
-        
+
         $newState->send_email = true;
         $newState->module_name = $this->name;
         $newState->invoice = true;
@@ -96,7 +96,7 @@ class Rave extends PaymentModule
 
         if ($newState->add()) {
             Configuration::updateValue('PS_OS_RAVE', $newState->id);
-            copy(dirname(__FILE__).'/logo.png', _PS_IMG_DIR_.'tmp/order_state_mini_'.(int)$newState->id.'_1.png');
+            copy(dirname(__FILE__) . '/logo.png', _PS_IMG_DIR_ . 'tmp/order_state_mini_' . (int)$newState->id . '_1.png');
         } else {
             return false;
         }
@@ -106,14 +106,16 @@ class Rave extends PaymentModule
 
     public function uninstall()
     {
-        if (!Configuration::deleteByName('RAVE_LIVE_SECRETKEY')
-            || !Configuration::deleteByName('RAVE_LIVE_PUBLICKEY') 
+        if (
+            !Configuration::deleteByName('RAVE_LIVE_SECRETKEY')
+            || !Configuration::deleteByName('RAVE_LIVE_PUBLICKEY')
             || !Configuration::deleteByName('RAVE_TEST_SECRETKEY')
             || !Configuration::deleteByName('RAVE_TEST_PUBLICKEY')
-                || !Configuration::deleteByName('RAVE_MERCHANT_LOGO')
-                || !Configuration::deleteByName('RAVE_PAYMENT_METHOD')
-                || !Configuration::deleteByName('RAVE_MERCHANT_COUNTRY')
-                || !parent::uninstall()) {
+            || !Configuration::deleteByName('RAVE_MERCHANT_LOGO')
+            || !Configuration::deleteByName('RAVE_PAYMENT_METHOD')
+            || !Configuration::deleteByName('RAVE_MERCHANT_COUNTRY')
+            || !parent::uninstall()
+        ) {
             return false;
         }
         return true;
@@ -196,53 +198,55 @@ class Rave extends PaymentModule
         $ref = 'order_' . $params['cart']->id . '_' . time();
         $redirectURL = $this->context->link->getModuleLink($this->name, 'success', array(), true);
 
-            $cart = $this->context->cart;
-            $gateway_chosen = 'rave';
-            $customer = new Customer((int)($cart->id_customer));
-            $currency_order = new Currency($cart->id_currency);
-            $currency = $currency_order->iso_code;
-            
+        $cart = $this->context->cart;
+        $gateway_chosen = 'rave';
+        $customer = new Customer((int)($cart->id_customer));
+        $currency_order = new Currency($cart->id_currency);
+        $currency = $currency_order->iso_code;
 
-            switch ($currency) {
-                case 'KES':
-                    $country = 'KE';
-                    break;
-                 case 'GHS':
-                    $country = 'GH';
-                    break;
-                 case 'ZAR':
-                    $country = 'ZA';
-                    break;
-                
-                default:
-                    $country = 'NG';
-                    break;
-            }
-            
-            
 
-            $amountToBePaid = $cart->getOrderTotal(true, Cart::BOTH);
-           
-            $postfields = array();
-            $postfields['publicKey'] = $publicKey;
-            $postfields['secretKey'] = $secretKey;
-            $postfields['env'] = $env;
-            $postfields['customer_email'] = $customer->email;
-            $postfields['customer_firstname'] = $customer->firstname;
-            $postfields['customer_lastname'] = $customer->lastname;
-            $postfields['custom_logo'] = $config['RAVE_MERCHANT_LOGO'];
-            $postfields['custom_description'] = $config['RAVE_MERCHANT_DESCRIPTION'] == '' ? "Payment for Cart: " . $cart->id . " on " . Configuration::get('PS_SHOP_NAME') : $config['RAVE_MERCHANT_DESCRIPTION'];
-            $postfields['custom_title'] = $config['RAVE_MERCHANT_TITLE'] == '' ? Configuration::get('PS_SHOP_NAME') : $config['RAVE_MERCHANT_TITLE'];
-            $postfields['country'] = $country;
-            $postfields['redirect_url'] = $redirectURL;
-            $postfields['txref'] = $ref;
-            $postfields['payment_method'] = $config['RAVE_PAYMENT_METHOD'];
-            $postfields['amount'] = $amountToBePaid + 0;
-            $postfields['currency'] = $currency;
-            $postfields['hosted_payment'] = 1;
-            $postfields['metaname'] = $config['RAVE_META_NAME'];
-            $postfields['metavalue'] = $config['RAVE_META_VALUE'];
-            
+        switch ($currency) {
+            case 'KES':
+                $country = 'KE';
+                break;
+            case 'GHS':
+                $country = 'GH';
+                break;
+            case 'ZAR':
+                $country = 'ZA';
+                break;
+            case 'TZS':
+                $country = 'TZ';
+                break;
+            default:
+                $country = 'NG';
+                break;
+        }
+
+
+
+        $amountToBePaid = $cart->getOrderTotal(true, Cart::BOTH);
+
+        $postfields = array();
+        $postfields['publicKey'] = $publicKey;
+        $postfields['secretKey'] = $secretKey;
+        $postfields['env'] = $env;
+        $postfields['customer_email'] = $customer->email;
+        $postfields['customer_firstname'] = $customer->firstname;
+        $postfields['customer_lastname'] = $customer->lastname;
+        $postfields['custom_logo'] = $config['RAVE_MERCHANT_LOGO'];
+        $postfields['custom_description'] = $config['RAVE_MERCHANT_DESCRIPTION'] == '' ? "Payment for Cart: " . $cart->id . " on " . Configuration::get('PS_SHOP_NAME') : $config['RAVE_MERCHANT_DESCRIPTION'];
+        $postfields['custom_title'] = $config['RAVE_MERCHANT_TITLE'] == '' ? Configuration::get('PS_SHOP_NAME') : $config['RAVE_MERCHANT_TITLE'];
+        $postfields['country'] = $country;
+        $postfields['redirect_url'] = $redirectURL;
+        $postfields['txref'] = $ref;
+        $postfields['payment_method'] = $config['RAVE_PAYMENT_METHOD'];
+        $postfields['amount'] = $amountToBePaid + 0;
+        $postfields['currency'] = $currency;
+        $postfields['hosted_payment'] = 1;
+        $postfields['metaname'] = $config['RAVE_META_NAME'];
+        $postfields['metavalue'] = $config['RAVE_META_VALUE'];
+
 
         $externalOption = new PaymentOption();
         $this->context->controller->registerStylesheet(
@@ -292,7 +296,7 @@ class Rave extends PaymentModule
                 Configuration::get('PS_OS_OUTOFSTOCK_UNPAID'),
             )
         )) {
-           
+
             $this->smarty->assign(array(
                 'shop_name' => $this->context->shop->name,
                 'total' => Tools::displayPrice(
@@ -339,7 +343,7 @@ class Rave extends PaymentModule
                     'title' => $this->trans('User details', array(), 'Modules.Rave.Admin'),
                     'icon' => 'icon-user'
                 ),
-        
+
                 'input' => array(
                     array(
                         'type' => 'switch',
@@ -347,12 +351,12 @@ class Rave extends PaymentModule
                         'name' => 'RAVE_ENV',
                         'is_bool' => true,
                         'required' => true,
-                         'values' =>array(
+                        'values' => array(
                             array(
                                 'id' => 'active_on',
                                 'value' => true,
                                 'label' => $this->trans('Test', array(), 'Modules.Rave.Admin')
-                            ),array(
+                            ), array(
                                 'id' => 'active_off',
                                 'value' => false,
                                 'label' => $this->trans('False', array(), 'Modules.Rave.Admin')
@@ -407,7 +411,7 @@ class Rave extends PaymentModule
                         'type' => 'select',
                         'label' => $this->trans('Payment Method', array(), 'Modules.Rave.Admin'),
                         'name' => 'RAVE_PAYMENT_METHOD',
-                        'options' =>array(
+                        'options' => array(
                             'query' => array(
                                 array(
                                     'id_option_api' => 'both',
@@ -434,7 +438,7 @@ class Rave extends PaymentModule
                         'type' => 'select',
                         'label' => $this->trans('Country', array(), 'Modules.Rave.Admin'),
                         'name' => 'RAVE_MERCHANT_COUNTRY',
-                        'options' =>array(
+                        'options' => array(
                             'query' => array(
                                 array(
                                     'id_option_api' => 'NG',
@@ -456,7 +460,7 @@ class Rave extends PaymentModule
                             'id' => 'id_option_api',
                             'name' => 'name_option_api'
                         ),
-                    ), 
+                    ),
                     array(
                         'type' => 'text',
                         'label' => $this->trans('Meta Name (optional)', array(), 'Modules.Rave.Admin'),
@@ -470,27 +474,27 @@ class Rave extends PaymentModule
                         'required' => false
                     )
                 ),
-                
+
                 'submit' => array(
                     'title' => $this->trans('Save', array(), 'Admin.Actions'),
                 )
             ),
         );
         $fields_form_customization = array();
-        
+
 
         $helper = new HelperForm();
         $helper->show_toolbar = false;
         $helper->table = $this->table;
         $lang = new Language((int)Configuration::get('PS_LANG_DEFAULT'));
         $helper->default_form_language = $lang->id;
-        $helper->allow_employee_form_lang = Configuration::get('PS_BO_ALLOW_EMPLOYEE_FORM_LANG') ? : 0;
+        $helper->allow_employee_form_lang = Configuration::get('PS_BO_ALLOW_EMPLOYEE_FORM_LANG') ?: 0;
         $this->fields_form = array();
         $helper->id = (int)Tools::getValue('id_carrier');
         $helper->identifier = $this->identifier;
         $helper->submit_action = 'btnSubmit';
-        $helper->currentIndex = $this->context->link->getAdminLink('AdminModules', false).'&configure='
-            .$this->name.'&tab_module='.$this->tab.'&module_name='.$this->name;
+        $helper->currentIndex = $this->context->link->getAdminLink('AdminModules', false) . '&configure='
+            . $this->name . '&tab_module=' . $this->tab . '&module_name=' . $this->name;
         $helper->token = Tools::getAdminTokenLite('AdminModules');
         $helper->tpl_vars = array(
             'fields_value' => $this->getConfigFieldsValues(),
