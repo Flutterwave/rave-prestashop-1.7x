@@ -41,9 +41,7 @@ class Rave {
     protected $transactionPrefix;
     public $logger;
     protected $handler;
-    protected $stagingUrl = 'https://rave-api-v2.herokuapp.com';
-    protected $liveUrl = 'https://api.ravepay.co';
-    protected $baseUrl;
+    protected $baseUrl = 'https://api.ravepay.co';
     protected $transactionData;
     protected $overrideTransactionReference;
     protected $requeryCount = 0;
@@ -69,13 +67,6 @@ class Rave {
         $log->pushHandler(new RotatingFileHandler('rave.log', 90, Logger::DEBUG));
         $this->createReferenceNumber();
         
-        if($this->env === 'staging'){
-            $this->baseUrl = $this->stagingUrl;
-        }elseif($this->env === 'live'){
-            $this->baseUrl = $this->liveUrl;
-        }else{
-            $this->baseUrl = $this->stagingUrl;
-        }
         
         $this->logger->notice('Rave Class Initializes....');
         
